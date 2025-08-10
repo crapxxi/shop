@@ -1,0 +1,117 @@
+// app/page.tsx
+import { Link } from "next/link";
+import { DropdownMenuItem } from "@radix-ui/react-dropdown-menu";
+
+export default function Page() {
+  return (
+    <div>
+      {/* Desktop navigation */}
+      <nav className="hidden md:flex">
+        <Link className="text-sm text-muted-foreground hover:text-foreground" href="/about">О нас</Link>
+        <Link className="text-sm text-muted-foreground hover:text-foreground" href="/contact">Контакты</Link>
+        {/* Other links */}
+      </nav>
+
+      {/* Mobile menu */}
+      <div className="md:hidden">
+        <DropdownMenuItem asChild>
+          <Link href="/about">О нас</Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/contact">Контакты</Link>
+        </DropdownMenuItem>
+        {/* Other menu items */}
+      </div>
+    </div>
+  );
+}
+
+// app/orders/page.tsx
+import { CardHeader, Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "ui";
+import { Button, Link } from "next/link";
+import { useState } from "react";
+
+export default function OrdersPage() {
+  const [filter, setFilter] = useState("all");
+
+  return (
+    <div>
+      <CardHeader>
+        <div className="flex items-center gap-2">
+          <Select value={filter} onValueChange={(v) => setFilter(v)}>
+            <SelectTrigger className="w-[220px]">
+              <SelectValue placeholder="Фильтр по статусу" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Все статусы</SelectItem>
+              <SelectItem value="pending">pending</SelectItem>
+              <SelectItem value="processing">processing</SelectItem>
+              <SelectItem value="shipping">shipping</SelectItem>
+              <SelectItem value="shipped">shipped</SelectItem>
+              <SelectItem value="completed">completed</SelectItem>
+              <SelectItem value="canceled">canceled</SelectItem>
+            </SelectContent>
+          </Select>
+          <Link href="/">
+            <Button variant="outline" className="transition active:scale-95 bg-transparent">
+              В каталог
+            </Button>
+          </Link>
+        </div>
+      </CardHeader>
+      {/* Other code */}
+    </div>
+  );
+}
+
+// app/orders/[id]/page.tsx
+import { CardHeader, CardTitle } from "ui";
+import { Button, Link } from "next/link";
+
+export default function OrderPage({ id }) {
+  return (
+    <div>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <CardTitle>Заказ #{id}</CardTitle>
+        <Link href="/">
+          <Button variant="outline" className="transition active:scale-95 bg-transparent">
+            В каталог
+          </Button>
+        </Link>
+      </CardHeader>
+      {/* Other code */}
+    </div>
+  );
+}
+
+// app/profile/page.tsx
+import { Button, Link } from "next/link";
+import { useProfile } from "hooks";
+
+export default function ProfilePage() {
+  const { profile } = useProfile();
+
+  return (
+    <div>
+      {/* Quick actions */}
+      <div className="flex gap-2 flex-wrap">
+        <Link href="/orders">
+          <Button variant="outline" className="bg-transparent transition active:scale-95">
+            Мои заказы
+          </Button>
+        </Link>
+        <Link href="/">
+          <Button className="transition active:scale-95">В каталог</Button>
+        </Link>
+        {profile.role === "admin" && (
+          <Link href="/admin">
+            <Button variant="outline" className="bg-transparent transition active:scale-95">
+              Админ-панель
+            </Button>
+          </Link>
+        )}
+      </div>
+      {/* Other code */}
+    </div>
+  );
+}
