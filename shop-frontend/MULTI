@@ -1,0 +1,268 @@
+/// components/global-tabs.tsx
+"use client"
+
+import { useMemo } from "react"
+import { usePathname, useRouter } from "next/navigation"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+type TabKey = "catalog" | "orders" | "profile" | "cart"
+
+const routeByTab: Record<TabKey, string> = {
+  catalog: "/",
+  orders: "/orders",
+  profile: "/profile",
+  cart: "/cart",
+}
+
+function currentTabFromPath(path: string | null): TabKey {
+  const p = (path || "/").toLowerCase()
+  if (p.startsWith("/orders")) return "orders"
+  if (p.startsWith("/profile")) return "profile"
+  if (p.startsWith("/cart")) return "cart"
+  // admin/settings pages should not show as separate tabs; default to catalog
+  // product details and /products alias considered catalog
+  return "catalog"
+}
+
+export function GlobalTabs({ className = "" }: { className?: string }) {
+  const pathname = usePathname()
+  const router = useRouter()
+  const value = useMemo(() => currentTabFromPath(pathname), [pathname])
+
+  function onValueChange(next: string) {
+    const key = next as TabKey
+    const href = routeByTab[key]
+    if (href) router.push(href)
+  }
+
+  return (
+    <Tabs value={value} onValueChange={onValueChange} className={className}>
+      <TabsList className="flex flex-wrap">
+        <TabsTrigger value="catalog">Каталог</TabsTrigger>
+        <TabsTrigger value="orders">Заказы</TabsTrigger>
+        <TabsTrigger value="profile">Профиль</TabsTrigger>
+        <TabsTrigger value="cart">Корзина</TabsTrigger>
+      </TabsList>
+    </Tabs>
+  )
+}
+
+// app/page.tsx
+"use client"
+
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { fetchJSON } from "@/lib/api"
+import { Loader2 } from 'lucide-react'
+import { Menu } from 'lucide-react'
+
+export default function HomePage() {
+  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
+  const router = useRouter()
+  const isAdmin = true; // Assume isAdmin is determined elsewhere
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetchJSON<{ message: string }>("/registration", {
+        method: "POST",
+        body: { username, password, email, role: "user" },
+      })
+      if (res.data) {
+        toast({ title: "Регистрация успешна" })
+        router.push("/login")
+      } else {
+        toast({ title: "Ошибка", description: res.error || "Не удалось зарегистрироваться", variant: "destructive" })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-[100dvh] grid place-items-center px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Регистрация</CardTitle>
+          <CardDescription>Создайте новый аккаунт.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="username">Имя пользователя</Label>
+              <Input id="username" required value={username} onChange={(e) => setUsername(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <Button type="submit" disabled={loading} aria-busy={loading} className="transition active:scale-95">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Зарегистрироваться"}
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Уже есть аккаунт?{" "}
+              <Link className="underline" href="/login">
+                Войти
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+      <header className="flex justify-between items-center">
+        <nav>
+          <ul className="flex">
+            <li>
+              <Link href="/">Каталог</Link>
+            </li>
+            <li>
+              <Link href="/orders">Заказы</Link>
+            </li>
+            <li>
+              <Link href="/profile">Профиль</Link>
+            </li>
+            <li>
+              <Link href="/cart">Корзина</Link>
+            </li>
+          </ul>
+        </nav>
+        {isAdmin && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden transition active:scale-95"
+                aria-label="Открыть меню"
+                title="Меню"
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link href="/admin">Админ</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/admin/orders">Все заказы</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">Настройки API</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+        <div className="flex gap-2">
+          <Button variant="outline">Войти</Button>
+          <Button>Выйти</Button>
+        </div>
+      </header>
+    </div>
+  )
+}
+
+// app/register/page.tsx
+"use client"
+
+import type React from "react"
+import { useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
+import { fetchJSON } from "@/lib/api"
+import { Loader2 } from 'lucide-react'
+
+export default function RegisterPage() {
+  const [username, setUsername] = useState("")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const { toast } = useToast()
+  const router = useRouter()
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      const res = await fetchJSON<{ message: string }>("/registration", {
+        method: "POST",
+        body: { username, password, email, role: "user" },
+      })
+      if (res.data) {
+        toast({ title: "Регистрация успешна" })
+        router.push("/login")
+      } else {
+        toast({ title: "Ошибка", description: res.error || "Не удалось зарегистрироваться", variant: "destructive" })
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="min-h-[100dvh] grid place-items-center px-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Регистрация</CardTitle>
+          <CardDescription>Создайте новый аккаунт.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={onSubmit} className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="username">Имя пользователя</Label>
+              <Input id="username" required value={username} onChange={(e) => setUsername(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="password">Пароль</Label>
+              <Input
+                id="password"
+                type="password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
+            <Button type="submit" disabled={loading} aria-busy={loading} className="transition active:scale-95">
+              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Зарегистрироваться"}
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              Уже есть аккаунт?{" "}
+              <Link className="underline" href="/login">
+                Войти
+              </Link>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}

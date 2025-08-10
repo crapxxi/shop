@@ -1,7 +1,7 @@
 const TOKEN_COOKIE = "auth_token"
 const LEGACY_TOKEN_KEY = "auth_token"
 const BASE_KEY = "api_base_url"
-const DEFAULT_BASE = "https://shop-4dv1.onrender.com"
+const DEFAULT_BASE = "http://localhost:8080"
 
 function sanitizeBaseUrl(input: string | null | undefined): string {
   let url = (input || "").trim()
