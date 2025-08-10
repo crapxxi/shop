@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { fetchJSON } from "@/lib/api"
 import { Loader2 } from "lucide-react"
@@ -17,7 +16,6 @@ export default function RegisterPage() {
   const [username, setUsername] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [role, setRole] = useState("user")
   const [loading, setLoading] = useState(false)
   const { toast } = useToast()
   const router = useRouter()
@@ -26,9 +24,10 @@ export default function RegisterPage() {
     e.preventDefault()
     setLoading(true)
     try {
+      // роль не отправляем — назначается автоматически на сервере (по умолчанию "пользователь")
       const res = await fetchJSON<{ message: string }>("/registration", {
         method: "POST",
-        body: { username, password, email, role },
+        body: { username, password, email },
       })
       if (res.data) {
         toast({ title: "Регистрация успешна" })
@@ -67,18 +66,6 @@ export default function RegisterPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
-            </div>
-            <div className="grid gap-2">
-              <Label>Роль</Label>
-              <Select value={role} onValueChange={setRole}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Выберите роль" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user">Покупатель</SelectItem>
-                  <SelectItem value="admin">Админ</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
             <Button type="submit" disabled={loading} aria-busy={loading} className="transition active:scale-95">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Зарегистрироваться"}

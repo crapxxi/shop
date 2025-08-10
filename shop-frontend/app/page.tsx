@@ -3,7 +3,7 @@
 import Link from "next/link"
 import Image from "next/image"
 import { useEffect, useMemo, useState } from "react"
-import { Menu, Settings, LogIn, LogOut, PackageSearch, Loader2 } from "lucide-react"
+import { LogIn, LogOut, PackageSearch, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -11,13 +11,6 @@ import { Separator } from "@/components/ui/separator"
 import { useToast } from "@/hooks/use-toast"
 import { fetchJSON, getToken, clearToken } from "@/lib/api"
 import type { ProductListItem, Profile } from "@/lib/types"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { GlobalTabs } from "@/components/global-tabs"
 
@@ -74,7 +67,7 @@ export default function Page() {
       try {
         const prof = await fetchJSON<Profile>("/profile", { auth: true })
         if (prof.data) setProfile(prof.data)
-        const cart = await fetchJSON<any[]>("/cart/", { auth: true })
+        await fetchJSON<any[]>("/cart/", { auth: true })
       } catch {
         // ignore
       }
@@ -95,8 +88,6 @@ export default function Page() {
     }, 300)
   }
 
-  const isAdmin = profile?.role === "admin"
-
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <header className="border-b">
@@ -104,71 +95,11 @@ export default function Page() {
           <Link href="/" className="font-semibold tracking-tight text-lg">
             Магазин
           </Link>
-          <nav className="ml-6 hidden md:flex gap-4">
-            {isAdmin && (
-              <>
-                <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin">
-                  Админ
-                </Link>
-                <Link className="text-sm text-muted-foreground hover:text-foreground" href="/admin/orders">
-                  Все заказы
-                </Link>
-              </>
-            )}
-          </nav>
+
+          {/* Desktop nav: admin links removed per request */}
 
           <div className="ml-auto flex items-center gap-2">
-            {/* Mobile menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="md:hidden transition active:scale-95"
-                  aria-label="Открыть меню"
-                  title="Меню"
-                >
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                {isAdmin && (
-                  <>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin">Админ</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/admin/orders">Все заказы</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/settings">Настройки API</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                  </>
-                )}
-                {!profile ? (
-                  <DropdownMenuItem asChild>
-                    <Link href="/login">Войти</Link>
-                  </DropdownMenuItem>
-                ) : (
-                  <DropdownMenuItem onClick={onLogout}>Выйти</DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            {isAdmin && (
-              <Link href="/settings" className="hidden sm:inline-flex">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  aria-label="Настройки API"
-                  className="transition active:scale-95"
-                  title="Настройки API"
-                >
-                  <Settings className="w-5 h-5" />
-                </Button>
-              </Link>
-            )}
+            {/* Settings gear removed; burger menu removed per request */}
             {profile ? (
               <Button
                 variant="outline"
@@ -192,6 +123,7 @@ export default function Page() {
           </div>
         </div>
       </header>
+
       <div className="container px-4 mt-4">
         <GlobalTabs />
       </div>
@@ -232,7 +164,7 @@ export default function Page() {
         {loading ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {new Array(6).fill(0).map((_, i) => (
-              <Card key={i} className="animate-pulse">
+              <Card key={`skeleton-${i}`} className="animate-pulse">
                 <div className="aspect-[4/3] bg-muted rounded-t-lg" />
                 <CardHeader>
                   <div className="h-5 bg-muted rounded w-3/4" />
@@ -251,7 +183,7 @@ export default function Page() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
             {sorted.map((p) => (
-              <Card key={p.id} className="overflow-hidden">
+              <Card key={`prod-${p.id}`} className="overflow-hidden">
                 <div className="relative aspect-[4/3] bg-muted">
                   <Image
                     src={p.image || "/placeholder.svg?height=400&width=600&query=product image placeholder"}
