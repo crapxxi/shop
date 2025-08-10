@@ -178,7 +178,8 @@ func main() {
 
 	jwt_key = []byte(os.Getenv("JWT"))
 	var err error
-	connStr := "user=postgres password=admin dbname=dbmagaztest sslmode=disable"
+
+	connStr := os.Getenv("DATABASE_URL")
 	db, err = sql.Open("postgres", connStr)
 	if err != nil {
 		log.Panic(err)

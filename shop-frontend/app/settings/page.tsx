@@ -85,7 +85,7 @@ export default function SettingsPage() {
             <CardDescription>Укажите адрес вашего Go API (например: http://localhost:8080)</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
-            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="http://localhost:8080" />
+            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://shop-4dv1.onrender.com" />
           </CardContent>
           <CardFooter>
             <Button onClick={save} className="w-full transition active:scale-95">
